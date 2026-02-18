@@ -54,17 +54,12 @@ jobs:
     needs: build-image
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Validate deploy webhook secret
-        env:
-          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+      - name: Trigger deployment webhook (if configured)
         run: |
           if [ -z "$DEPLOY_WEBHOOK_URL" ]; then
             echo "DEPLOY_WEBHOOK_URL secret is not set; skipping deploy trigger."
             exit 0
           fi
-
-      - name: Trigger deployment webhook
-        if: ${{ secrets.DEPLOY_WEBHOOK_URL != '' }}
-        run: curl -fsS -X POST "$DEPLOY_WEBHOOK_URL"
+          curl -fsS -X POST "$DEPLOY_WEBHOOK_URL"
         env:
           DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
