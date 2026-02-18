@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Project-specific
+data/raw/
+data/processed/
+models/
+artifacts/
+logs/
+mlruns/
+
+IMPLEMENTATION_PLAN.md
+End-to-End MLOps Project Documentation.txt
+uv.lock

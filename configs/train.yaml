@@ -1,0 +1,10 @@
+experiment:
+  name: fraud-detection-baseline
+
+training:
+  test_size: 0.2
+  random_state: 42
+  model: logistic_regression
+
+threshold:
+  decision_threshold: 0.5
