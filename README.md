@@ -1,3 +1,12 @@
+---
+title: Fraud Detection MLOps API
+emoji: 🚨
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 8000
+---
+
 # Fraud Detection MLOps Pipeline
 
 End-to-end fraud detection project with reproducible training, model tracking, API serving, containerization, and CI.
@@ -62,6 +71,13 @@ All planned phases (0-9) are complete.
   - `deploy`: optional webhook trigger on pushes to `main`
 - Optional secret for deploy job:
   - `DEPLOY_WEBHOOK_URL`
+
+## Hugging Face Space Auto-Deploy
+- Workflow: `.github/workflows/deploy-hf-space.yml`
+- Trigger: push to `main` (and manual `workflow_dispatch`)
+- Required GitHub Secrets:
+  - `HF_TOKEN`: Hugging Face User Access Token (write permission)
+  - `HF_SPACE_REPO`: `<username>/<space-name>` (example: `vithu/fraud-detection-mlops-api`)
 
 ## Monitoring and Operations
 - Endpoint: `GET /metrics`
