@@ -43,7 +43,18 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_SPACE_REPO: ${{ secrets.HF_SPACE_REPO }}
         run: |
-          git remote add hf "https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_REPO}"
+          TMP_DIR="$(mktemp -d)"
+          rsync -a --delete --exclude=".git" ./ "${TMP_DIR}/"
+
+          # Exclude artifacts not needed for serving in Space.
+          rm -f "${TMP_DIR}/models/xgboost.pkl"
+
+          cd "${TMP_DIR}"
+          git init -b main
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "chore: prune HF deployment artifacts" || true
-          git push hf HEAD:main --force
+          git commit -m "deploy: sync snapshot from github"
+
+          git remote add hf "https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_REPO}"
+          git push hf main --force
