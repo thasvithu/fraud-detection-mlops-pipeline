@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from api.app import app, get_inference_service
@@ -87,4 +88,18 @@ def test_batch_prediction_endpoint() -> None:
     assert len(body["predictions"]) == 2
     assert body["predictions"][0]["is_fraud"] is False
     assert body["predictions"][1]["is_fraud"] is True
+    app.dependency_overrides.clear()
+
+
+def test_health_returns_503_when_service_unavailable() -> None:
+    def _raise():
+        raise HTTPException(status_code=503, detail="Model artifact not found")
+
+    app.dependency_overrides[get_inference_service] = _raise
+    client = TestClient(app)
+
+    response = client.get("/health")
+
+    assert response.status_code == 503
+    assert "Model artifact not found" in response.json()["detail"]
     app.dependency_overrides.clear()
