@@ -1,0 +1,94 @@
+{
+  "timestamp_utc": "2026-02-18T04:09:02.997602+00:00",
+  "experiment_name": "fraud-detection-baseline",
+  "tracking_uri": "file:./mlruns",
+  "data_path": "data/raw/creditcard.csv",
+  "preprocessor_path": "models/preprocessor.pkl",
+  "model_path": "models/model.pkl",
+  "model_report_path": "artifacts/model_report.json",
+  "best_model": {
+    "model_name": "logistic_regression",
+    "run_id": "f953d6a1c2d944338f8fc210408267a9",
+    "metrics": {
+      "precision": 0.06097560975609756,
+      "recall": 0.9183673469387755,
+      "f1": 0.11435832274459974,
+      "roc_auc": 0.9721687370080279,
+      "pr_auc": 0.7159122424484009,
+      "confusion_matrix": [
+        [
+          55478,
+          1386
+        ],
+        [
+          8,
+          90
+        ]
+      ]
+    },
+    "selected_threshold": 0.74,
+    "threshold_metrics": {
+      "precision": 0.13650306748466257,
+      "recall": 0.9081632653061225,
+      "f1": 0.23733333333333334,
+      "roc_auc": 0.9721687370080279,
+      "pr_auc": 0.7159122424484009,
+      "confusion_matrix": [
+        [
+          56301,
+          563
+        ],
+        [
+          9,
+          89
+        ]
+      ],
+      "threshold": 0.74
+    }
+  },
+  "all_results": [
+    {
+      "model_name": "logistic_regression",
+      "run_id": "f953d6a1c2d944338f8fc210408267a9",
+      "metrics": {
+        "precision": 0.06097560975609756,
+        "recall": 0.9183673469387755,
+        "f1": 0.11435832274459974,
+        "roc_auc": 0.9721687370080279,
+        "pr_auc": 0.7159122424484009,
+        "confusion_matrix": [
+          [
+            55478,
+            1386
+          ],
+          [
+            8,
+            90
+          ]
+        ]
+      }
+    },
+    {
+      "model_name": "xgboost",
+      "run_id": "0ad9425817db4958a142b29f816108f4",
+      "metrics": {
+        "precision": 0.9186046511627907,
+        "recall": 0.8061224489795918,
+        "f1": 0.8586956521739131,
+        "roc_auc": 0.9775147361983623,
+        "pr_auc": 0.87487299490182,
+        "confusion_matrix": [
+          [
+            56857,
+            7
+          ],
+          [
+            19,
+            79
+          ]
+        ]
+      }
+    }
+  ],
+  "skipped_models": []
+}

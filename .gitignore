@@ -209,8 +209,6 @@ __marimo__/
 # Project-specific
 data/raw/
 data/processed/
-models/
-artifacts/
 logs/
 mlruns/
 

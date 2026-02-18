@@ -1,0 +1,16 @@
+{
+  "is_valid": true,
+  "errors": [],
+  "warnings": [],
+  "statistics": {
+    "row_count": 284807,
+    "column_count": 31,
+    "missing_values_total": 0,
+    "duplicate_rows": 1081,
+    "class_counts": {
+      "0": 284315,
+      "1": 492
+    },
+    "fraud_ratio": 0.001727485630620034
+  }
+}
