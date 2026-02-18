@@ -79,6 +79,12 @@ All planned phases (0-9) are complete.
   - `HF_TOKEN`: Hugging Face User Access Token (write permission)
   - `HF_SPACE_REPO`: `<username>/<space-name>` (example: `vithu/fraud-detection-mlops-api`)
 
+## Hugging Face Keepalive
+- Workflow: `.github/workflows/keepalive-hf-space.yml`
+- Trigger: scheduled (Mon/Wed/Fri at 09:00 UTC) + manual run
+- Required GitHub Secret:
+  - `HF_SPACE_URL`: full Space URL (example: `https://thasvithu-fraud-detection-mlops-api.hf.space`)
+
 ## Monitoring and Operations
 - Endpoint: `GET /metrics`
 - Metrics exposed:
