@@ -33,10 +33,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Remove non-serving artifacts for HF push
+        run: |
+          # Space runtime only needs selected serving artifacts.
+          rm -f models/xgboost.pkl
+
       - name: Push to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_SPACE_REPO: ${{ secrets.HF_SPACE_REPO }}
         run: |
           git remote add hf "https://oauth2:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_REPO}"
+          git add -A
+          git commit -m "chore: prune HF deployment artifacts" || true
           git push hf HEAD:main --force
