@@ -37,10 +37,10 @@ flowchart LR
     E --> F[Artifacts<br/>models/*.pkl<br/>artifacts/*.json]
     F --> G[Inference Service<br/>api/service.py]
     G --> H[FastAPI App<br/>api/app.py]
-    H --> I[/predict]
-    H --> J[/predict/batch]
-    H --> K[/health]
-    H --> L[/metrics]
+    H --> I["/predict"]
+    H --> J["/predict/batch"]
+    H --> K["/health"]
+    H --> L["/metrics"]
 ```
 
 ## ML Training Workflow
