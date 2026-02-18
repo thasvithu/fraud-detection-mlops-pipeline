@@ -15,7 +15,7 @@ import yaml
 from sklearn.linear_model import LogisticRegression
 
 from src.data_ingestion import load_data, run_data_validation
-from src.evaluate import calculate_metrics, rank_models
+from src.evaluate import calculate_metrics, rank_models, select_best_threshold
 from src.preprocessing import preprocess_for_training
 
 try:
@@ -29,6 +29,7 @@ DEFAULT_DATA_PATH = Path("data/raw/creditcard.csv")
 DEFAULT_MODEL_PATH = Path("models/model.pkl")
 DEFAULT_PREPROCESSOR_PATH = Path("models/preprocessor.pkl")
 DEFAULT_REPORT_PATH = Path("artifacts/model_training_report.json")
+DEFAULT_MODEL_REPORT_PATH = Path("artifacts/model_report.json")
 DEFAULT_VALIDATION_REPORT_PATH = Path("artifacts/data_validation.json")
 
 
@@ -95,6 +96,7 @@ def log_run_to_mlflow(
     metrics: dict[str, Any],
     preprocessor_path: Path,
     model_temp_path: Path,
+    artifact_dir: Path,
 ) -> str:
     """Log one training run to MLflow and return run id."""
     mlflow.set_experiment(experiment_name)
@@ -104,7 +106,7 @@ def log_run_to_mlflow(
         mlflow.log_metrics(metric_values)
 
         # Structured artifacts for debugging and reproducibility.
-        metrics_path = Path("artifacts") / f"metrics_{model_name}.json"
+        metrics_path = artifact_dir / f"metrics_{model_name}.json"
         metrics_path.parent.mkdir(parents=True, exist_ok=True)
         metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
@@ -130,6 +132,7 @@ def run_training_pipeline(
     model_path: str | Path = DEFAULT_MODEL_PATH,
     preprocessor_path: str | Path = DEFAULT_PREPROCESSOR_PATH,
     report_path: str | Path = DEFAULT_REPORT_PATH,
+    model_report_path: str | Path = DEFAULT_MODEL_REPORT_PATH,
     validation_report_path: str | Path = DEFAULT_VALIDATION_REPORT_PATH,
 ) -> dict[str, Any]:
     """Execute end-to-end training and experiment tracking pipeline."""
@@ -144,6 +147,11 @@ def run_training_pipeline(
     test_size = float(training_cfg.get("test_size", 0.2))
     imbalance_method = str(training_cfg.get("imbalance_method", "class_weight"))
     models = training_cfg.get("models") or [training_cfg.get("model", "logistic_regression")]
+    threshold_cfg = config.get("threshold", {})
+    min_recall_target = float(threshold_cfg.get("min_recall_target", 0.90))
+    threshold_grid_size = int(threshold_cfg.get("grid_size", 99))
+    threshold_min = float(threshold_cfg.get("min_threshold", 0.01))
+    threshold_max = float(threshold_cfg.get("max_threshold", 0.99))
 
     run_data_validation(file_path=data_path, report_path=validation_report_path)
     raw_df = load_data(data_path)
@@ -157,6 +165,8 @@ def run_training_pipeline(
 
     results: list[dict[str, Any]] = []
     skipped_models: list[dict[str, str]] = []
+    artifact_dir = Path(report_path).parent
+    artifact_dir.mkdir(parents=True, exist_ok=True)
     preprocessor_path_obj = Path(preprocessor_path)
     for model_name in models:
         try:
@@ -172,7 +182,7 @@ def run_training_pipeline(
             skipped_models.append({"model_name": model_name, "reason": str(exc)})
             continue
 
-        temp_model_path = Path("models") / f"{model_name}.pkl"
+        temp_model_path = Path(model_path).parent / f"{model_name}.pkl"
         save_model(model, temp_model_path)
 
         run_id = log_run_to_mlflow(
@@ -187,6 +197,7 @@ def run_training_pipeline(
             metrics=metrics,
             preprocessor_path=preprocessor_path_obj,
             model_temp_path=temp_model_path,
+            artifact_dir=artifact_dir,
         )
 
         results.append({"model_name": model_name, "model": model, "metrics": metrics, "run_id": run_id})
@@ -196,6 +207,31 @@ def run_training_pipeline(
 
     ranked = rank_models(results)
     best = ranked[0]
+    y_test_proba_best = best["model"].predict_proba(prep["X_test"])[:, 1]
+    threshold_selection = select_best_threshold(
+        prep["y_test"],
+        y_test_proba_best,
+        min_recall=min_recall_target,
+        min_threshold=threshold_min,
+        max_threshold=threshold_max,
+        grid_size=threshold_grid_size,
+    )
+
+    model_report = {
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "best_model_name": best["model_name"],
+        "default_threshold_metrics": best["metrics"],
+        "threshold_selection": threshold_selection,
+        "evaluation_summary": {
+            "test_rows": int(len(prep["y_test"])),
+            "min_recall_target": min_recall_target,
+            "selection_reason": threshold_selection["selection_reason"],
+        },
+    }
+    model_report_path_obj = Path(model_report_path)
+    model_report_path_obj.parent.mkdir(parents=True, exist_ok=True)
+    model_report_path_obj.write_text(json.dumps(model_report, indent=2), encoding="utf-8")
+
     final_model_path = save_model(best["model"], model_path)
 
     report = {
@@ -205,10 +241,13 @@ def run_training_pipeline(
         "data_path": str(data_path),
         "preprocessor_path": str(preprocessor_path),
         "model_path": str(final_model_path),
+        "model_report_path": str(model_report_path_obj),
         "best_model": {
             "model_name": best["model_name"],
             "run_id": best["run_id"],
             "metrics": best["metrics"],
+            "selected_threshold": threshold_selection["selected_threshold"],
+            "threshold_metrics": threshold_selection["selected_metrics"],
         },
         "all_results": [
             {"model_name": entry["model_name"], "run_id": entry["run_id"], "metrics": entry["metrics"]}
@@ -235,6 +274,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Output preprocessor artifact path.",
     )
     parser.add_argument("--report-path", default=str(DEFAULT_REPORT_PATH), help="Training report JSON path.")
+    parser.add_argument(
+        "--model-report-path",
+        default=str(DEFAULT_MODEL_REPORT_PATH),
+        help="Model evaluation report JSON path.",
+    )
     return parser
 
 
@@ -246,12 +290,14 @@ def main() -> None:
         model_path=args.model_path,
         preprocessor_path=args.preprocessor_path,
         report_path=args.report_path,
+        model_report_path=args.model_report_path,
     )
 
     best = report["best_model"]
     print("Training completed.")
     print(f"Best model: {best['model_name']}")
-    print(json.dumps(best["metrics"], indent=2))
+    print(f"Selected threshold: {best['selected_threshold']:.4f}")
+    print(json.dumps(best["threshold_metrics"], indent=2))
 
 
 if __name__ == "__main__":

@@ -70,6 +70,7 @@ def test_run_training_pipeline_creates_report_and_model(tmp_path) -> None:
     model_path = tmp_path / "best_model.pkl"
     preprocessor_path = tmp_path / "preprocessor.pkl"
     report_path = tmp_path / "training_report.json"
+    model_report_path = tmp_path / "model_report.json"
     validation_report_path = tmp_path / "data_validation.json"
 
     df.to_csv(data_path, index=False)
@@ -92,14 +93,17 @@ def test_run_training_pipeline_creates_report_and_model(tmp_path) -> None:
         model_path=model_path,
         preprocessor_path=preprocessor_path,
         report_path=report_path,
+        model_report_path=model_report_path,
         validation_report_path=validation_report_path,
     )
 
     assert model_path.exists()
     assert preprocessor_path.exists()
     assert report_path.exists()
+    assert model_report_path.exists()
     assert validation_report_path.exists()
     assert report["best_model"]["model_name"] == "logistic_regression"
+    assert 0.0 < report["best_model"]["selected_threshold"] < 1.0
 
     stored = json.loads(report_path.read_text(encoding="utf-8"))
     assert stored["best_model"]["run_id"]
