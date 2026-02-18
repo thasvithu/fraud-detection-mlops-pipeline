@@ -3,7 +3,7 @@
 End-to-end fraud detection project with reproducible training, model tracking, API serving, containerization, and CI.
 
 ## Project Status
-Phases 0, 1, 2, 3, 4, 5, 6, 7, and 8 are complete.
+Phases 0, 1, 2, 3, 4, 5, 6, 7, 8, and 9 are complete.
 
 ## Repository Structure
 ```
@@ -46,8 +46,8 @@ uv run uvicorn api.app:app --reload --host 0.0.0.0 --port 8000
 Place the Kaggle credit card dataset at:
 - `data/raw/creditcard.csv`
 
-## Next Implementation Phases
-- Phase 9: Monitoring and operations
+## Implementation Status
+All planned phases (0-9) are complete.
 
 ## Quality Gates
 - Test runner: `pytest` with coverage gates
@@ -62,6 +62,32 @@ Place the Kaggle credit card dataset at:
   - `deploy`: optional webhook trigger on pushes to `main`
 - Optional secret for deploy job:
   - `DEPLOY_WEBHOOK_URL`
+
+## Monitoring and Operations
+- Endpoint: `GET /metrics`
+- Metrics exposed:
+  - `total_requests`
+  - `error_count`
+  - `error_rate`
+  - `total_predictions`
+  - `fraud_predictions`
+  - `fraud_prediction_rate`
+  - `avg_latency_ms`
+- Request observability:
+  - `X-Request-ID` response header
+  - `X-Process-Time-Ms` response header
+  - structured JSON logs for request completion and prediction summaries
+
+## Operational Playbook
+- High error rate:
+  - Trigger: `error_rate > 0.05` over recent traffic
+  - Checks: model/preprocessor artifacts present, recent deploys, endpoint exceptions
+- Latency regression:
+  - Trigger: `avg_latency_ms` increasing abnormally
+  - Checks: container CPU/memory pressure, batch size spikes, model loading issues
+- Prediction behavior drift:
+  - Trigger: sudden change in `fraud_prediction_rate`
+  - Checks: input schema/data drift, threshold configuration drift, retrain recency
 
 ## Containerization
 - Build image:

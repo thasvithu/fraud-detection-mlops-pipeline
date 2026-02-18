@@ -63,3 +63,13 @@ class HealthResponse(BaseModel):
     model_path: str
     preprocessor_path: str
     threshold: float
+
+
+class MetricsResponse(BaseModel):
+    total_requests: int
+    error_count: int
+    error_rate: float
+    total_predictions: int
+    fraud_predictions: int
+    fraud_prediction_rate: float
+    avg_latency_ms: float

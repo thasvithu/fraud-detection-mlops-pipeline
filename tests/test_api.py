@@ -59,6 +59,7 @@ def test_predict_endpoint_valid_payload() -> None:
     body = response.json()
     assert body["is_fraud"] is True
     assert body["risk_level"] == "high"
+    assert response.headers.get("X-Request-ID")
     app.dependency_overrides.clear()
 
 
@@ -88,6 +89,28 @@ def test_batch_prediction_endpoint() -> None:
     assert len(body["predictions"]) == 2
     assert body["predictions"][0]["is_fraud"] is False
     assert body["predictions"][1]["is_fraud"] is True
+    app.dependency_overrides.clear()
+
+
+def test_metrics_endpoint_tracks_predictions_and_requests() -> None:
+    app.dependency_overrides[get_inference_service] = lambda: DummyService()
+    client = TestClient(app)
+
+    before = client.get("/metrics")
+    assert before.status_code == 200
+    before_body = before.json()
+
+    predict_response = client.post("/predict", json=_transaction(amount=350.0))
+    assert predict_response.status_code == 200
+
+    after = client.get("/metrics")
+    assert after.status_code == 200
+    after_body = after.json()
+
+    assert after_body["total_requests"] >= before_body["total_requests"] + 2
+    assert after_body["total_predictions"] >= before_body["total_predictions"] + 1
+    assert 0.0 <= after_body["error_rate"] <= 1.0
+    assert 0.0 <= after_body["fraud_prediction_rate"] <= 1.0
     app.dependency_overrides.clear()
 
 
