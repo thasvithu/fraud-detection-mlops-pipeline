@@ -3,7 +3,7 @@
 End-to-end fraud detection project with reproducible training, model tracking, API serving, containerization, and CI.
 
 ## Project Status
-Phases 0, 1, 2, 3, and 4 are complete.
+Phases 0, 1, 2, 3, 4, and 5 are complete.
 
 ## Repository Structure
 ```
@@ -47,4 +47,7 @@ Place the Kaggle credit card dataset at:
 - `data/raw/creditcard.csv`
 
 ## Next Implementation Phases
-- Phase 5+: API hardening, CI/CD, monitoring
+- Phase 6: Testing and quality gates hardening
+- Phase 7: Containerization hardening
+- Phase 8: CI/CD automation expansion
+- Phase 9: Monitoring and operations
