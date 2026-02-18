@@ -3,7 +3,7 @@
 End-to-end fraud detection project with reproducible training, model tracking, API serving, containerization, and CI.
 
 ## Project Status
-Phases 0, 1, and 2 are complete.
+Phases 0, 1, 2, and 3 are complete.
 
 ## Repository Structure
 ```
@@ -31,7 +31,7 @@ uv pip install -r requirements.txt
 ## Run Commands
 - Train pipeline:
 ```bash
-python -m src.train
+uv run python -m src.train
 ```
 - Run tests:
 ```bash
@@ -47,6 +47,5 @@ Place the Kaggle credit card dataset at:
 - `data/raw/creditcard.csv`
 
 ## Next Implementation Phases
-- Phase 3: Training + MLflow tracking
 - Phase 4: Evaluation + thresholding
 - Phase 5+: API hardening, CI/CD, monitoring
